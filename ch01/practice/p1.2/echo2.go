@@ -1,13 +1,12 @@
 // 练习1.2：修改echo程序，使其打印每个参数的索引和值，每个一行。
-package test
+package main
 
 import (
 	"fmt"
 	"os"
-	"testing"
 )
 
-func TestEcho2(t *testing.T) {
+func main() {
 	for k, arg := range os.Args {
 		fmt.Println(k, arg)
 	}

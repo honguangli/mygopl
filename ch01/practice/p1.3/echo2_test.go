@@ -1,5 +1,5 @@
 // 练习1.3：做实验测量潜在低效的版本和使用了strings.Join的版本的运行时间差异。
-package test
+package main
 
 import (
 	"fmt"
