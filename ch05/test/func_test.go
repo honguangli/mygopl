@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"golang.org/x/net/html"
 	"net/http"
+	"strings"
 	"testing"
 )
 
@@ -51,4 +52,47 @@ func CountWordsAndImages(url string) (words, images int, err error) {
 func countWordsAndImages(n *html.Node) (words, images int) {
 	/* ... */
 	return
+}
+
+// 函数值
+func TestFunctionValue(t *testing.T) {
+	f := square
+	fmt.Println(f(3)) // "9"
+
+	f = negative
+	fmt.Println(f(3))     // "-3"
+	fmt.Printf("%T\n", f) // "func(int) int"
+
+	//f = product // compile error: can't assign func(int, int) int to func(int) int
+
+	fmt.Println(strings.Map(add1, "HAL-9000")) // "IBM.:111"
+	fmt.Println(strings.Map(add1, "VMS"))      // "WNT"
+	fmt.Println(strings.Map(add1, "Admix"))    // "Benjy"
+}
+func square(n int) int {
+	return n * n
+}
+func negative(n int) int {
+	return -n
+}
+func product(m, n int) int {
+	return m * n
+}
+func add1(r rune) rune {
+	return r + 1
+}
+
+var depth int
+
+func startElement(n *html.Node) {
+	if n.Type == html.ElementNode {
+		fmt.Printf("%*s<%s>\n", depth*2, "", n.Data)
+		depth++
+	}
+}
+func endElement(n *html.Node) {
+	if n.Type == html.ElementNode {
+		depth--
+		fmt.Printf("%*s</%s>\n", depth*2, "", n.Data)
+	}
 }
