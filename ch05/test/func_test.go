@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"golang.org/x/net/html"
 	"net/http"
+	"os"
 	"strings"
 	"testing"
 )
@@ -95,4 +96,25 @@ func endElement(n *html.Node) {
 		depth--
 		fmt.Printf("%*s</%s>\n", depth*2, "", n.Data)
 	}
+}
+
+// 捕获迭代变量
+func TestFunction2(t *testing.T) {
+	var rmdirs []func()
+	for _, d := range tempDirs() {
+		dir := d            // NOTE: necessary!
+		os.Mkdir(dir, 0755) // creates parent directories too
+		rmdirs = append(rmdirs, func() {
+			os.RemoveAll(dir)
+		})
+	}
+	// ...do some work...
+	for _, rmdir := range rmdirs {
+		rmdir() // clean up
+	}
+}
+
+func tempDirs() []string {
+	var dirs = []string{"a", "b", "c"}
+	return dirs
 }
