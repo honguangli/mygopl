@@ -118,3 +118,93 @@ func tempDirs() []string {
 	var dirs = []string{"a", "b", "c"}
 	return dirs
 }
+
+func TestFunctionDefer(t *testing.T) {
+	var msg = "ttt"
+	defer deferTest(msg)
+	msg = "hhh"
+	fmt.Println(msg)
+}
+
+func deferTest(msg string) {
+	fmt.Println(msg)
+}
+
+func TestFunctionRecover(t *testing.T) {
+	const url = "http://www.baidu.com"
+	resp, err := http.Get(url)
+	if err != nil {
+		fmt.Printf("%s", err)
+		return
+	}
+	// Check Content-Type is HTML (e.g., "text/html;charset=utf-8").
+	ct := resp.Header.Get("Content-Type")
+	if ct != "text/html" && !strings.HasPrefix(ct, "text/html;") {
+		resp.Body.Close()
+		fmt.Printf("%s has type %s, not text/html", url, ct)
+		return
+	}
+	doc, err := html.Parse(resp.Body)
+	resp.Body.Close()
+	if err != nil {
+		fmt.Printf("parsing %s as HTML: %v", url, err)
+		return
+	}
+	title, err := soleTitle(doc)
+	if err != nil {
+		fmt.Printf("soletitle %s", err)
+		return
+	}
+	fmt.Println(title)
+}
+
+func recoverTest(input string) (err error) {
+	defer func() {
+		if p := recover(); p != nil {
+			err = fmt.Errorf("internal error: %v", p)
+		}
+	}()
+	// ...parser...
+
+	return
+}
+
+// soleTitle returns the text of the first non-empty title element
+// in doc, and an error if there was not exactly one.
+func soleTitle(doc *html.Node) (title string, err error) {
+	type bailout struct{}
+	defer func() {
+		switch p := recover(); p {
+		case nil: // no panic
+		case bailout{}: // "expected" panic
+			err = fmt.Errorf("multiple title elements")
+		default:
+			panic(p) // unexpected panic; carry on panicking
+		}
+	}()
+	// Bail out of recursion if we find more than ont nonempty title.
+	forEachNode(doc, func(n *html.Node) {
+		if n.Type == html.ElementNode && n.Data == "title" && n.FirstChild != nil {
+			if title != "" {
+				panic(bailout{}) // multiple title elements
+			}
+			title = n.FirstChild.Data
+		}
+	}, nil)
+	if title == "" {
+		return "", fmt.Errorf("no title element")
+	}
+	return title, nil
+}
+
+func forEachNode(n *html.Node, pre, post func(n *html.Node)) {
+	if pre != nil {
+		pre(n)
+	}
+	for c := n.FirstChild; c != nil; c = c.NextSibling {
+		forEachNode(c, pre, post)
+	}
+	if post != nil {
+		post(n)
+	}
+}
