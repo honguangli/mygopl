@@ -2,7 +2,10 @@ package test
 
 import (
 	"fmt"
+	"image/color"
+	"mygopl/ch06/coloredpoint"
 	"mygopl/ch06/geometry"
+	"sync"
 	"testing"
 )
 
@@ -56,4 +59,57 @@ func (list *IntList) Sum() int {
 		return 0
 	}
 	return list.Value + list.Tail.Sum()
+}
+
+func TestMethod3(t *testing.T) {
+	var cp coloredpoint.ColoredPoint
+	cp.X = 1
+	fmt.Println(cp.Point.X) // "1"
+	cp.Point.Y = 2
+	fmt.Println(cp.Y) // "2"
+
+	red := color.RGBA{255, 0, 0, 255}
+	blue := color.RGBA{0, 0, 255, 255}
+	var p = coloredpoint.ColoredPoint{geometry.Point{1, 1}, red}
+	var q = coloredpoint.ColoredPoint{geometry.Point{5, 4}, blue}
+	fmt.Println(p.Distance(q.Point)) // "5"
+	p.ScaleBy(2)
+	q.ScaleBy(2)
+	fmt.Println(p.Distance(q.Point)) // "10"
+}
+
+func TestMethodCache(t *testing.T) {
+	fmt.Println(Lookup("hhh"))
+	mapping["hhh"] = "h1h1h1"
+	fmt.Println(Lookup("hhh"))
+
+	fmt.Println(Lookup2("hhh"))
+	cache.mapping["hhh"] = "h1h1h1"
+	fmt.Println(Lookup2("hhh"))
+}
+
+var (
+	mu      sync.Mutex // guards mapping
+	mapping = make(map[string]string)
+)
+
+func Lookup(key string) string {
+	mu.Lock()
+	v := mapping[key]
+	mu.Unlock()
+	return v
+}
+
+var cache = struct {
+	sync.Mutex
+	mapping map[string]string
+}{
+	mapping: make(map[string]string),
+}
+
+func Lookup2(key string) string {
+	cache.Lock()
+	v := cache.mapping[key]
+	cache.Unlock()
+	return v
 }
